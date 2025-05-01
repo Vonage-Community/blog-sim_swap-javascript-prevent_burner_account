@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Vonage SIM Swap Check</title>
+    <script src="/client.js" defer></script>
+
+    <style></style>
+  </head>
+  <body>
+    <h1>Login</h1>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required />
+      <br /><br />
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required />
+      <br /><br />
+      <button type="submit">Login</button>
+    </form>
+
+    <p>
+      You can sign up now if you don't have an account.
+      <a
+        href="#"
+        onclick="document.getElementById('registerForm').style.display='block';"
+        >Register here</a
+      >
+    </p>
+
+    <form id="registerForm">
+      <h2>Register</h2>
+      <label for="regUsername">Username:</label>
+      <input type="text" id="regUsername" name="regUsername" required />
+      <br /><br />
+      <label for="regPassword">Password:</label>
+      <input type="password" id="regPassword" name="regPassword" required />
+      <br /><br />
+      <label for="phoneNumber">Phone Number:</label>
+      <input type="text" id="phoneNumber" name="phoneNumber" required />
+      <br /><br />
+      <button type="submit">Register</button>
+    </form>
+  </body>
+</html>
