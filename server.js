@@ -1,48 +1,28 @@
 require("dotenv").config();
 const path = require("path");
 const express = require("express");
-const { NetworkClient } = require('@vonage/network-client');
-const { AuthenticationType } = require('@vonage/server-client');
+const { SIMSwap } = require('@vonage/network-sim-swap');
 
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-const simSwapApiUrl = "https://api-eu.vonage.com/camara/sim-swap/v040/check";
 const users = {};
 
 const APPLICATION_ID = process.env.VONAGE_APPLICATION_ID;
 const PRIVATE_KEY = process.env.VONAGE_PRIVATE_KEY;
 
-class SimSwap extends NetworkClient {
-  authType = AuthenticationType.CIBA;
-  _purpose = "FraudPreventionAndDetection"
-  _scope = "check-sim-swap"
 
-  async checkSim(phoneNumber) {
-    this._msisdn = phoneNumber
-    const response = await this.sendPostRequest(
-      simSwapApiUrl,
-      {
-        phoneNumber: phoneNumber,
-        maxAge: process.env.MAX_AGE,
-      }
-    );
-
-    return response.swapped;
-  }
-}
-
-const simSwapClient = new SimSwap({
+const simSwapClient = new SIMSwap({
   applicationId: APPLICATION_ID,
   privateKey: PRIVATE_KEY,
 });
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "views/index.html"));
 });
 
-app.get("/main", (req, res) => {
+app.get("/main", (_req, res) => {
   res.sendFile(path.join(__dirname, "views/main.html"));
 });
 
@@ -78,7 +58,7 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "This is an invalid username or password" });
     }
 
-    const simSwapped = await simSwapClient.checkSim(user.phoneNumber);
+    const simSwapped = await simSwapClient.checkSwapSim({phoneNumber: user.phoneNumber});
 
     if (simSwapped) {
       return res.status(401).json({ message: "SIM Swap: true" });
