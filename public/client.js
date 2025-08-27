@@ -25,9 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.href = "/main";
         } else {
           if (data.simSwapped) {
-            alert("Access denied: A recent SIM swap was detected. Please contact support.");
-          } else {
+            alert(
+              "Access denied: A recent SIM swap was detected. Please contact support."
+            );
+          } else if (response.status === 401 || response.status === 404) {
             alert(`Unable to login: ${data.message}`);
+          } else {
+            alert("Unexpected error occurred. Please try again.");
           }
         }
       } catch (error) {
