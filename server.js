@@ -159,7 +159,7 @@ app.post("/login", async (req, res) => {
         .json({ message: "This is an invalid username or password" });
     }
 
-    const period = Number(process.env.PERIOD || 240);
+    const period = process.env.PERIOD ? Number(process.env.PERIOD) : undefined;
 
     const simSwapped = await checkSimSwapWithIdentityInsights(user.phoneNumber, period);
 
