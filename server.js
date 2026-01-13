@@ -43,38 +43,21 @@ async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
 
   try {
     if (typeof identityClient.simSwap === "function") {
-      const resp = await identityClient.simSwap({ msisdn: phoneNumber, period: period });
+      const resp = await identityClient.getIdentityInsights({
+        phoneNumber: phoneNumber,
+        purpose: 'FraudPreventionAndDetection',
+        insights: {
+          'simSwap': true,
+        }
+      });
 
-      if (!resp) {
-        return false;
-      }
-      if (resp.sim_swap === true || resp.simSwap === true) {
-        return true;
-      }
-      if (resp.result && resp.result.sim_swap) {
-        return true;
-      }
-      return false;
+      return resp.simSwap === true;
     }
-
-    if (identityClient.insights && typeof identityClient.insights.simSwap === "function") {
-      const resp = await identityClient.insights.simSwap({ msisdn: phoneNumber, period: period });
-      if (!resp) {
-        return false;
-      }
-      if (resp.sim_swap === true || resp.simSwap === true) {
-        return true;
-      }
-      if (resp.result && resp.result.sim_swap) {
-        return true;
-      }
-      return false;
-    }
-  } catch (e) {
-    console.warn("Identity Insights SDK call failed, falling back to HTTP check:", e && e.message);
   }
-
-  return false;
+  catch (e) {
+    console.warn("calling Identity Insights API call failed:", e.message);
+    return false;
+  }
 }
 
 app.get("/", (_req, res) => {
