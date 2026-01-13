@@ -13,49 +13,27 @@ const users = {};
 const APPLICATION_ID = process.env.VONAGE_APPLICATION_ID;
 const PRIVATE_KEY = process.env.VONAGE_PRIVATE_KEY;
 
-let credentials = null;
-if (APPLICATION_ID && PRIVATE_KEY) {
-  try {
-    const keyContent = fs.readFileSync(PRIVATE_KEY);
-    credentials = new Auth({
-      applicationId: APPLICATION_ID,
-      privateKey: keyContent,
-    });
-  } catch (e) {
-    console.warn("Failed to read VONAGE_PRIVATE_KEY file:", e && e.message);
-    credentials = null;
-  }
-} else {
-  console.warn("VONAGE_APPLICATION_ID or VONAGE_PRIVATE_KEY not set; JWT auth disabled.");
+// Bootstrap Step
+if (!APPLICATION_ID || !PRIVATE_KEY) {
+  console.error('VONAGE_APPLICATION_ID or VONAGE_PRIVATE_KEY not set');
+  process.exit(1);
+};
+
+const keyContent = fs.existsSync(PRIVATE_KEY)
+  ? fs.readFileSync(PRIVATE_KEY)
+  : PRIVATE_KEY;
+
+if (!keyContent) {
+  console.error('INVALID private key. Check if the file exists or the environment variable is correctly set');
+  process.exit(1);
 }
 
-const apiKey = process.env.VONAGE_API_KEY;
-const apiSecret = process.env.VONAGE_API_SECRET;
+const clientOptions = {};
 
-let identityClient;
-try {
-  let IdentityInsights;
-  try {
-    IdentityInsights = require("@vonage/identity-insights").IdentityInsights;
-  } catch (err) {
-    IdentityInsights = null;
-    console.warn("@vonage/identity-insights not found or missing build artifacts; falling back to HTTP checks");
-  }
-
-  if (IdentityInsights) {
-    if (apiKey && apiSecret) {
-      identityClient = new IdentityInsights({ apiKey, apiSecret });
-    } else {
-      // fall back to JWT-authenticated client when API key/secret are not provided
-      identityClient = new IdentityInsights({ auth: credentials });
-    }
-  } else {
-    identityClient = null;
-  }
-} catch (e) {
-  console.warn("Failed to initialize Identity Insights client:", e && e.message);
-  identityClient = null;
-}
+const credentials = new Auth({
+  applicationId: APPLICATION_ID,
+  privateKey: keyContent,
+});
 
 async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
   if (Number(period) < 500) {
@@ -63,13 +41,10 @@ async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
     return true;
   }
 
-  if (!identityClient) {
-    return false;
-  }
   try {
     if (typeof identityClient.simSwap === "function") {
       const resp = await identityClient.simSwap({ msisdn: phoneNumber, period: period });
-    
+
       if (!resp) {
         return false;
       }
@@ -97,37 +72,6 @@ async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
     }
   } catch (e) {
     console.warn("Identity Insights SDK call failed, falling back to HTTP check:", e && e.message);
-  }
-
-  // Fallback: call the Insights Sim Swap HTTP endpoint directly using API key/secret if available
-  if (apiKey && apiSecret) {
-    try {
-      const url = "https://api.vonage.com/v1/insights/sim-swap";
-      const body = { msisdn: phoneNumber, period: period };
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64"),
-        },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        return false;
-      }
-      const data = await res.json();
-      if (!data) {
-        return false;
-      }
-      if (data.sim_swap === true || data.simSwap === true) {
-        return true;
-      }
-      if (data.result && data.result.sim_swap) {
-        return true;
-      }
-    } catch (e) {
-      console.error("Fallback HTTP sim-swap check failed:", e && e.message);
-    }
   }
 
   return false;
