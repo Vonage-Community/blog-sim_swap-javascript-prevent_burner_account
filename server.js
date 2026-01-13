@@ -63,22 +63,36 @@ async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
     return true;
   }
 
-  if (!identityClient) return false;
+  if (!identityClient) {
+    return false;
+  }
   try {
     if (typeof identityClient.simSwap === "function") {
       const resp = await identityClient.simSwap({ msisdn: phoneNumber, period: period });
     
-      if (!resp) return false;
-      if (resp.sim_swap === true || resp.simSwap === true) return true;
-      if (resp.result && resp.result.sim_swap) return true;
+      if (!resp) {
+        return false;
+      }
+      if (resp.sim_swap === true || resp.simSwap === true) {
+        return true;
+      }
+      if (resp.result && resp.result.sim_swap) {
+        return true;
+      }
       return false;
     }
 
     if (identityClient.insights && typeof identityClient.insights.simSwap === "function") {
       const resp = await identityClient.insights.simSwap({ msisdn: phoneNumber, period: period });
-      if (!resp) return false;
-      if (resp.sim_swap === true || resp.simSwap === true) return true;
-      if (resp.result && resp.result.sim_swap) return true;
+      if (!resp) {
+        return false;
+      }
+      if (resp.sim_swap === true || resp.simSwap === true) {
+        return true;
+      }
+      if (resp.result && resp.result.sim_swap) {
+        return true;
+      }
       return false;
     }
   } catch (e) {
@@ -98,11 +112,19 @@ async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
         },
         body: JSON.stringify(body),
       });
-      if (!res.ok) return false;
+      if (!res.ok) {
+        return false;
+      }
       const data = await res.json();
-      if (!data) return false;
-      if (data.sim_swap === true || data.simSwap === true) return true;
-      if (data.result && data.result.sim_swap) return true;
+      if (!data) {
+        return false;
+      }
+      if (data.sim_swap === true || data.simSwap === true) {
+        return true;
+      }
+      if (data.result && data.result.sim_swap) {
+        return true;
+      }
     } catch (e) {
       console.error("Fallback HTTP sim-swap check failed:", e && e.message);
     }
@@ -184,3 +206,4 @@ app.post("/login", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });
+
