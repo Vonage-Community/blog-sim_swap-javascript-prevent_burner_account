@@ -1,6 +1,6 @@
 {
   "name": "burner-account-sim-swap-check",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -8,9 +8,7 @@
   },
   "dependencies": {
     "@vonage/auth": "^1.12.0",
-    "@vonage/network-client": "1.4.1",
-    "@vonage/network-sim-swap": "1.4.1",
-    "@vonage/server-client": "1.17.1",
+    "@vonage/identity-insights": "^1.0.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2"
   },

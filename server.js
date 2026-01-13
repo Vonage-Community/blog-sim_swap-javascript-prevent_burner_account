@@ -2,7 +2,6 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const { Auth } = require("@vonage/auth");
-const { SIMSwap } = require("@vonage/network-sim-swap");
 const fs = require("fs");
 
 const app = express();
@@ -14,12 +13,52 @@ const users = {};
 const APPLICATION_ID = process.env.VONAGE_APPLICATION_ID;
 const PRIVATE_KEY = process.env.VONAGE_PRIVATE_KEY;
 
+// Bootstrap Step
+if (!APPLICATION_ID || !PRIVATE_KEY) {
+  console.error('VONAGE_APPLICATION_ID or VONAGE_PRIVATE_KEY not set');
+  process.exit(1);
+};
+
+const keyContent = fs.existsSync(PRIVATE_KEY)
+  ? fs.readFileSync(PRIVATE_KEY)
+  : PRIVATE_KEY;
+
+if (!keyContent) {
+  console.error('INVALID private key. Check if the file exists or the environment variable is correctly set');
+  process.exit(1);
+}
+
+const clientOptions = {};
+
 const credentials = new Auth({
   applicationId: APPLICATION_ID,
-  privateKey: fs.readFileSync(PRIVATE_KEY),
+  privateKey: keyContent,
 });
-const options = {};
-const simSwapClient = new SIMSwap(credentials, options);
+
+async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
+  if (Number(period) < 500) {
+    console.log("Forcing SIM swap true due to period <", period);
+    return true;
+  }
+
+  try {
+    if (typeof identityClient.simSwap === "function") {
+      const resp = await identityClient.getIdentityInsights({
+        phoneNumber: phoneNumber,
+        purpose: 'FraudPreventionAndDetection',
+        insights: {
+          'simSwap': true,
+        }
+      });
+
+      return resp.simSwap === true;
+    }
+  }
+  catch (e) {
+    console.warn("calling Identity Insights API call failed:", e.message);
+    return false;
+  }
+}
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "views/index.html"));
@@ -56,11 +95,12 @@ app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = users[username];
-    console.log("Attempting SIM swap check on phone number:", user.phoneNumber);
 
     if (!user) {
       return res.status(404).json({ message: "Not Found" });
     }
+
+    console.log("Attempting SIM swap check on phone number:", user.phoneNumber);
 
     if (user.password !== password) {
       return res
@@ -68,12 +108,9 @@ app.post("/login", async (req, res) => {
         .json({ message: "This is an invalid username or password" });
     }
 
-    const maxAge = Number(process.env.MAX_AGE || 240);
+    const period = process.env.PERIOD ? Number(process.env.PERIOD) : undefined;
 
-    const simSwapped = await simSwapClient.checkSwapSim({
-      phoneNumber: user.phoneNumber,
-      maxAge,
-    });
+    const simSwapped = await checkSimSwapWithIdentityInsights(user.phoneNumber, period);
 
     if (simSwapped) {
       return res
@@ -96,3 +133,4 @@ app.post("/login", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });
+
