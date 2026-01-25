@@ -36,5 +36,5 @@ This project is a web application demonstrating how to prevent malicious burner 
 
 5. Launch your web browser and enter the URL:
    ```bash
-   http://localhost:8000/
+   http://localhost:3000/
    ```

@@ -1,7 +1,7 @@
 require("dotenv").config();
 const path = require("path");
 const express = require("express");
-const { Auth } = require("@vonage/auth");
+const { IdentityInsights } = require("@vonage/identity-insights");
 const fs = require("fs");
 
 const app = express();
@@ -12,15 +12,16 @@ const users = {};
 
 const APPLICATION_ID = process.env.VONAGE_APPLICATION_ID;
 const PRIVATE_KEY = process.env.VONAGE_PRIVATE_KEY;
+const PERIOD = process.env.PERIOD;
 
 // Bootstrap Step
 if (!APPLICATION_ID || !PRIVATE_KEY) {
   console.error('VONAGE_APPLICATION_ID or VONAGE_PRIVATE_KEY not set');
   process.exit(1);
-};
+}
 
 const keyContent = fs.existsSync(PRIVATE_KEY)
-  ? fs.readFileSync(PRIVATE_KEY)
+  ? fs.readFileSync(PRIVATE_KEY, 'utf8')
   : PRIVATE_KEY;
 
 if (!keyContent) {
@@ -28,35 +29,28 @@ if (!keyContent) {
   process.exit(1);
 }
 
-const clientOptions = {};
-
-const credentials = new Auth({
+const identityClient = new IdentityInsights({
   applicationId: APPLICATION_ID,
   privateKey: keyContent,
 });
 
+identityClient.config.identityInsightsHost = 'https://api-eu.vonage.com';
+
 async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
-  if (Number(period) < 500) {
-    console.log("Forcing SIM swap true due to period <", period);
-    return true;
-  }
-
   try {
-    if (typeof identityClient.simSwap === "function") {
-      const resp = await identityClient.getIdentityInsights({
-        phoneNumber: phoneNumber,
-        purpose: 'FraudPreventionAndDetection',
-        insights: {
-          'simSwap': true,
+    const resp = await identityClient.getIdentityInsights({
+      phone_number: phoneNumber,
+      purpose: 'FraudPreventionAndDetection',
+      insights: {
+        sim_swap: {
+          period: parseInt(period)
         }
-      });
+      }
+    });
 
-      return resp.simSwap === true;
-    }
-  }
-  catch (e) {
-    console.warn("calling Identity Insights API call failed:", e.message);
-    return false;
+    return resp.insights?.simSwap?.isSwapped === true;
+  } catch (error) {
+    console.warn('Identity Insights SDK call failed:', error && error.message);
   }
 }
 
@@ -108,9 +102,7 @@ app.post("/login", async (req, res) => {
         .json({ message: "This is an invalid username or password" });
     }
 
-    const period = process.env.PERIOD ? Number(process.env.PERIOD) : undefined;
-
-    const simSwapped = await checkSimSwapWithIdentityInsights(user.phoneNumber, period);
+    const simSwapped = await checkSimSwapWithIdentityInsights(user.phoneNumber, PERIOD);
 
     if (simSwapped) {
       return res
