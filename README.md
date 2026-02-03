@@ -1,8 +1,9 @@
-# Prevent Burner Account Creation Using the SIM Swap API
+# Prevent Burner Account Creation Using the SIM Swap Insight
 
 ## Overview
 
-This project is a web application demonstrating how to prevent malicious burner accounts where the creator is using a potentially stolen phone number by utilizing the Vonage SIM Swap API to verify against phone numbers.
+This project is a web application demonstrating how to prevent malicious burner accounts where the creator is using a potentially stolen phone number by utilizing the Vonage SIM Swap Insight to verify against phone numbers.
+
 ## Prerequisites
 
 - A [Vonage Developer Account](https://developer.vonage.com).
@@ -25,7 +26,7 @@ This project is a web application demonstrating how to prevent malicious burner 
    ```bash
     JWT=your_jwt_token
 
-    MAX_AGE=72
+    PERIOD=72
    ```
 
 4. Run the application:
@@ -35,5 +36,5 @@ This project is a web application demonstrating how to prevent malicious burner 
 
 5. Launch your web browser and enter the URL:
    ```bash
-   http://localhost:8000/
+   http://localhost:3000/
    ```
