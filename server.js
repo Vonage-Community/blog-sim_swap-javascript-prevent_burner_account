@@ -34,15 +34,16 @@ const identityClient = new IdentityInsights({
   privateKey: keyContent,
 });
 
-identityClient.config.identityInsightsHost = 'https://api-eu.vonage.com';
-
 async function checkSimSwapWithIdentityInsights(phoneNumber, period) {
   try {
     const resp = await identityClient.getIdentityInsights({
-      phone_number: phoneNumber,
+      phoneNumber: phoneNumber,
       purpose: 'FraudPreventionAndDetection',
       insights: {
-        sim_swap: {
+        format: {},
+        originalCarrier: {},
+        currentCarrier: {},
+        simSwap: {
           period: parseInt(period)
         }
       }
