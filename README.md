@@ -1,8 +1,8 @@
-# Prevent Burner Account Creation Using the SIM Swap Insight
+# Prevent Account Takeover Fraud with the Vonage SIM Swap Insight
 
 ## Overview
 
-This project is a web application demonstrating how to prevent malicious burner accounts where the creator is using a potentially stolen phone number by utilizing the Vonage SIM Swap Insight to verify against phone numbers.
+We all have business and personal accounts registered on several online websites and applications. Account takeover occurs when attackers hijack accounts using stolen credentials, SIM swaps, or phishing. In this blog post. I will demonstrate how to use Vonage SIM Swap Insight to verify phone numbers during login. Even if the hijacker has the correct user and password credentials, we’ll add an additional SIM Swap check.
 
 ## Prerequisites
 
