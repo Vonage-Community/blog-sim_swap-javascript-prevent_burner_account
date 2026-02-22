@@ -24,8 +24,6 @@ We all have business and personal accounts registered on several online websites
    ```
 
    ```bash
-    JWT=your_jwt_token
-
     PERIOD=72
    ```
 
